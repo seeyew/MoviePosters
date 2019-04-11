@@ -28,6 +28,6 @@ public class SearchResponse {
     }
 
     static <T> SearchResponse fail(Throwable throwable) {
-        return new SearchResponse(true, null, throwable);
+        return new SearchResponse(false, null, throwable);
     }
 }

@@ -20,12 +20,12 @@ public class MainActivity extends AppCompatActivity {
         final TextView result = findViewById(R.id.result);
 
         NetworkDataSource source = new NetworkDataSource();
-        source.search("Hello").observe(this, new Observer<SearchResponse>() {
+        source.search("my name is").observe(this, new Observer<SearchResponse>() {
             @Override
             public void onChanged(SearchResponse searchResponse) {
 
                 if (searchResponse.isSuccess()) {
-                    result.setText(searchResponse.getData().getTotalResults());
+                    result.setText("Total Results" + searchResponse.getData().getTotalResults());
                 } else {
                     result.setText(searchResponse.getThrowable().getMessage());
                 }
