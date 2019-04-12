@@ -19,8 +19,9 @@ public class NetworkDataSource {
 
     private static final String API = "http://www.omdbapi.com/";
     private static final String API_KEY = "82c4cc71";
-    private MovieWebService webService;
+    private final MovieWebService webService;
     private final MutableLiveData<SearchResponse> searchResults;
+    private Call<SearchResult> searchResultCall;
 
     public NetworkDataSource() {
         searchResults = new MutableLiveData<>();
@@ -57,18 +58,50 @@ public class NetworkDataSource {
         webService = retrofit.create(MovieWebService.class);
     }
 
-    public LiveData<SearchResponse> search(String key) {
-        webService.searchPoster(key).enqueue(new Callback<SearchResult>() {
+    public LiveData<SearchResponse> search(final String key) {
+        if (searchResultCall != null) {
+            searchResultCall.cancel();
+        }
+
+        searchResultCall = webService.searchPoster(key);
+        searchResultCall.enqueue(new Callback<SearchResult>() {
             @Override
             public void onResponse(Call<SearchResult> call, retrofit2.Response<SearchResult> response) {
-                searchResults.postValue(SearchResponse.success(response.body()));
+                searchResults.postValue(SearchResponse.success(key,response.body()));
             }
 
             @Override
             public void onFailure(Call<SearchResult> call, Throwable t) {
-                searchResults.postValue(SearchResponse.fail(t));
+                if (!call.isCanceled()) {
+                    //Only post result if it's cancelled
+                    searchResults.postValue(SearchResponse.fail(key, t));
+                }
             }
         });
         return searchResults;
+    }
+
+    public void searchWithCallback(final String key, NetworkCallback<SearchResponse> callback) {
+        //support one search at a time!
+        if (searchResultCall != null) {
+            searchResultCall.cancel();
+        }
+
+        webService.searchPoster(key).enqueue(new Callback<SearchResult>() {
+            @Override
+            public void onResponse(Call<SearchResult> call, retrofit2.Response<SearchResult> response) {
+                if (callback != null) {
+                    callback.onResponse(SearchResponse.success(key, response.body()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SearchResult> call, Throwable t) {
+                if (!call.isCanceled()) {
+                    //Only post result if it's cancelled
+                    callback.onResponse(SearchResponse.fail(key,t));
+                }
+            }
+        });
     }
 }

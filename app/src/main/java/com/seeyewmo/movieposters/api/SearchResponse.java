@@ -1,11 +1,13 @@
 package com.seeyewmo.movieposters.api;
 
 public class SearchResponse {
+    private final String term;
     private final SearchResult data;
     private final Throwable throwable;
     private final boolean success;
 
-    private SearchResponse(boolean success, SearchResult data, Throwable t) {
+    private SearchResponse(String term, boolean success, SearchResult data, Throwable t) {
+        this.term = term;
         this.data = data;
         this.success = success;
         this.throwable = t;
@@ -23,11 +25,11 @@ public class SearchResponse {
         return success;
     }
 
-    static <T> SearchResponse success(SearchResult data) {
-        return new SearchResponse(true, data, null);
+    static <T> SearchResponse success(String term, SearchResult data) {
+        return new SearchResponse(term,true, data, null);
     }
 
-    static <T> SearchResponse fail(Throwable throwable) {
-        return new SearchResponse(false, null, throwable);
+    static <T> SearchResponse fail(String term, Throwable throwable) {
+        return new SearchResponse(term,false, null, throwable);
     }
 }

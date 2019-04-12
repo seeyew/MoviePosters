@@ -1,6 +1,7 @@
 package com.seeyewmo.movieposters.api;
 
 import com.google.gson.annotations.SerializedName;
+import com.seeyewmo.movieposters.dto.MoviePoster;
 
 public class SearchResult {
 
@@ -8,6 +9,10 @@ public class SearchResult {
     private int totalResults;
     @SerializedName("Response")
     private boolean response;
+
+    @SerializedName("Search")
+    private MoviePoster[] moviePosters;
+
 
     public SearchResult(int totalResults, boolean response) {
         this.totalResults = totalResults;
@@ -22,4 +27,7 @@ public class SearchResult {
         return response;
     }
 
+    public MoviePoster[] getMoviePosters() {
+        return moviePosters;
+    }
 }
