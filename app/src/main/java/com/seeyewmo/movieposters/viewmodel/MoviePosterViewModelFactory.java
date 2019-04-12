@@ -7,12 +7,18 @@ import androidx.lifecycle.ViewModelProvider;
 
 public class MoviePosterViewModelFactory implements ViewModelProvider.Factory {
     private final MoviePostersRepository repository;
-    public MoviePosterViewModelFactory(MoviePostersRepository repository) {
+    private String queryTerm;
+    public MoviePosterViewModelFactory(MoviePostersRepository repository, String queryTerm) {
         this.repository = repository;
+        this.queryTerm = queryTerm;
     }
 
     @Override
     public <T extends ViewModel> T create(Class<T> modelClass) {
-        return (T) new MoviePosterViewModel(repository);
+        MoviePosterViewModel vm = new MoviePosterViewModel(repository);
+        if (queryTerm != null) {
+            vm.searchText(queryTerm);
+        }
+        return (T) vm;
     }
 }

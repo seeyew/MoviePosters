@@ -74,7 +74,7 @@ public class NetworkDataSource {
             public void onFailure(Call<SearchResult> call, Throwable t) {
                 if (!call.isCanceled()) {
                     //Only post result if it's cancelled
-                    searchResults.postValue(SearchResponse.fail(key, t));
+                    searchResults.postValue(SearchResponse.fail(key, t.getLocalizedMessage()));
                 }
             }
         });
@@ -91,7 +91,14 @@ public class NetworkDataSource {
             @Override
             public void onResponse(Call<SearchResult> call, retrofit2.Response<SearchResult> response) {
                 if (callback != null) {
-                    callback.onResponse(SearchResponse.success(key, response.body()));
+                    //TODO: Handle too many results
+                    SearchResult result = response.body();
+                    if (result.isSuccessful()) {
+                        callback.onResponse(SearchResponse.success(key, result));
+                    } else {
+                        callback.onResponse(SearchResponse.fail(key, result.getError()));
+                    }
+
                 }
             }
 
@@ -99,7 +106,7 @@ public class NetworkDataSource {
             public void onFailure(Call<SearchResult> call, Throwable t) {
                 if (!call.isCanceled()) {
                     //Only post result if it's cancelled
-                    callback.onResponse(SearchResponse.fail(key,t));
+                    callback.onResponse(SearchResponse.fail(key,t.getLocalizedMessage()));
                 }
             }
         });

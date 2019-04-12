@@ -21,7 +21,6 @@ public class MoviePoster {
     @SerializedName("Poster")
     private String poster;
 
-
     public int getId() { return id; }
 
     public void setId(int id) { this.id = id; }

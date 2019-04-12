@@ -13,6 +13,8 @@ public class SearchResult {
     @SerializedName("Search")
     private MoviePoster[] moviePosters;
 
+    @SerializedName("Error")
+    private String error;
 
     public SearchResult(int totalResults, boolean response) {
         this.totalResults = totalResults;
@@ -23,11 +25,15 @@ public class SearchResult {
         return totalResults;
     }
 
-    public boolean isResponse() {
+    public boolean isSuccessful() {
         return response;
     }
 
     public MoviePoster[] getMoviePosters() {
         return moviePosters;
+    }
+
+    public String getError() {
+        return error;
     }
 }

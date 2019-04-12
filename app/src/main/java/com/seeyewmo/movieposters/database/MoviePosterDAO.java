@@ -16,7 +16,7 @@ import androidx.room.Update;
 @Dao
 public interface MoviePosterDAO {
 
-    @Query("SELECT id, title, year, imdbId, type, poster FROM movieposter WHERE term= :term")
+    @Query("SELECT id, title, year, imdbId, type, poster, term FROM movieposter WHERE term= :term")
     LiveData<List<MoviePoster>> searchMoviePoster(String term);
 
     @Query("SELECT * FROM movieposter WHERE id = :id")

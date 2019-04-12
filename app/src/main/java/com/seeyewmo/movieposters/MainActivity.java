@@ -1,29 +1,43 @@
 package com.seeyewmo.movieposters;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
+import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
 
-import android.net.Network;
+import android.app.SearchManager;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.View;
 import android.widget.TextView;
 
 import com.seeyewmo.movieposters.Respository.MoviePostersRepository;
 import com.seeyewmo.movieposters.api.NetworkDataSource;
-import com.seeyewmo.movieposters.api.SearchResponse;
 import com.seeyewmo.movieposters.database.MoviePosterDB;
 import com.seeyewmo.movieposters.dto.Resource;
+import com.seeyewmo.movieposters.ui.MoviePosterAdapter;
 import com.seeyewmo.movieposters.viewmodel.MoviePosterViewModel;
 import com.seeyewmo.movieposters.viewmodel.MoviePosterViewModelFactory;
 
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
-
+    private static final String TAG = "MainActivity";
     private static final String DATABASE_NAME = "movies_db";
     private MoviePosterDB movieDatabase;
     private MoviePosterViewModel viewModel;
+    private RecyclerView mRecyclerView;
+    private MoviePosterAdapter mAdapter;
+    private TextView resultView;
+    private String queryTerm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,20 +48,46 @@ public class MainActivity extends AppCompatActivity {
                 MoviePosterDB.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
         viewModel = ViewModelProviders.of(this,
                 new MoviePosterViewModelFactory(new MoviePostersRepository(new NetworkDataSource(),
-                        movieDatabase.moviePosterDAO(), Executors.newCachedThreadPool())))
+                        movieDatabase.moviePosterDAO(), Executors.newCachedThreadPool()),
+                        savedInstanceState == null ? null : savedInstanceState.getString(QUERY_KEY)))
                 .get(MoviePosterViewModel.class);
 
-        final TextView result = findViewById(R.id.result);
+        resultView = findViewById(R.id.status);
+        mRecyclerView = findViewById(R.id.recycler_view);
+        mAdapter = new MoviePosterAdapter();
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         viewModel.getResults().observe(this, searchResponse -> {
             if (searchResponse.getStatus() == Resource.Status.SUCCESS) {
-                result.setText("Total Results" + searchResponse.getData().size());
-            } else if (searchResponse.getStatus() == Resource.Status.ERROR){
-                result.setText(searchResponse.getException().getMessage());
+//                result.setText("Total Results" + searchResponse.getData().size());
+                //TODO this might have to be moved into viewmodel
+                if (searchResponse.getData().size() > 0) {
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                    resultView.setVisibility(View.GONE);
+                } else {
+                    mRecyclerView.setVisibility(View.GONE);
+                    resultView.setVisibility(View.VISIBLE);
+                    resultView.setText(R.string.no_results);
+                }
+                mAdapter.setData(searchResponse.getData());
+                return;
+            }
+
+            //In other cases, it's loading, so let's show status
+            mRecyclerView.setVisibility(View.GONE);
+            resultView.setVisibility(View.VISIBLE);
+
+            if (searchResponse.getStatus() == Resource.Status.ERROR){
+                resultView.setText(getString(R.string.error, searchResponse.getException()));
+            } else {
+                resultView.setText(getString(R.string.loading));
             }
         });
 
-        viewModel.searchText("the last of the");
+//        viewModel.searchText("the last of the");
+
+
 
 //        NetworkDataSource source = new NetworkDataSource();
 //        source.search("my name is").observe(this, new Observer<SearchResponse>() {
@@ -57,9 +97,50 @@ public class MainActivity extends AppCompatActivity {
 //                if (searchResponse.isSuccess()) {
 //                    result.setText("Total Results" + searchResponse.getData().getTotalResults());
 //                } else {
-//                    result.setText(searchResponse.getThrowable().getMessage());
+//                    result.setText(searchResponse.getError().getMessage());
 //                }
 //            }
 //        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView =
+                (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
+
+        return true;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            Log.d(TAG, "Query: " + query);
+            queryTerm = query;
+            viewModel.searchText(query);
+            mAdapter.clearData();
+        }
+    }
+
+    private static final String QUERY_KEY = "query";
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        if (!TextUtils.isEmpty(queryTerm)) {
+            outState.putString(QUERY_KEY, queryTerm);
+        }
+        super.onSaveInstanceState(outState);
     }
 }

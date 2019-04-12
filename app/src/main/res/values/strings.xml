@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MoviePosters</string>
+    <string name="search_hint">Start by searching..</string>
+    <string name="loading">Loading..</string>
+    <string name="error">Error: %s</string>
+    <string name="no_results">No results. Please enter a search term</string>
 </resources>

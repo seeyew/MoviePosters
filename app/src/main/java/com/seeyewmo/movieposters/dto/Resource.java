@@ -7,12 +7,12 @@ public class Resource<T> {
 
     private final Status status;
     private final T data;
-    private final Throwable throwable;
+    private final String error;
 
-    private Resource(Status status, T data, Throwable throwable) {
+    private Resource(Status status, T data, String throwable) {
         this.status = status;
         this.data = data;
-        this.throwable = throwable;
+        this.error = throwable;
     }
 
     public Status getStatus() {
@@ -23,15 +23,15 @@ public class Resource<T> {
         return data;
     }
 
-    public Throwable getException() {
-        return throwable;
+    public String getException() {
+        return error;
     }
 
     public static <T> Resource<T> success( T data) {
         return new Resource<>(Status.SUCCESS, data, null);
     }
 
-    public static <T> Resource<T> error(Throwable exception, T data) {
+    public static <T> Resource<T> error(String exception, T data) {
         return new Resource<>(Status.ERROR, data, exception);
     }
 

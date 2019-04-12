@@ -1,10 +1,5 @@
 package com.seeyewmo.movieposters.Respository;
 
-import android.graphics.Movie;
-import android.net.Network;
-import android.util.Log;
-import android.widget.Toast;
-
 import com.seeyewmo.movieposters.api.NetworkCallback;
 import com.seeyewmo.movieposters.api.NetworkDataSource;
 import com.seeyewmo.movieposters.api.SearchResponse;
@@ -12,18 +7,12 @@ import com.seeyewmo.movieposters.database.MoviePosterDAO;
 import com.seeyewmo.movieposters.dto.MoviePoster;
 import com.seeyewmo.movieposters.dto.Resource;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.Observer;
-import androidx.room.Query;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MoviePostersRepository {
 
@@ -63,7 +52,7 @@ public class MoviePostersRepository {
                                     moviePosterDAO.bulkInsert(posters);
                                 });
                             } else {
-                                result.postValue(Resource.error(data.getThrowable(), null));
+                                result.postValue(Resource.error(data.getError(), null));
                             }
                         }
                     });
