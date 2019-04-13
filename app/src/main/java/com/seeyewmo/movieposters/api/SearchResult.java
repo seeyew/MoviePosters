@@ -25,7 +25,7 @@ public class SearchResult {
         return totalResults;
     }
 
-    public boolean isSuccessful() {
+    boolean isSuccessful() {
         return response;
     }
 
@@ -33,7 +33,7 @@ public class SearchResult {
         return moviePosters;
     }
 
-    public String getError() {
+    String getError() {
         return error;
     }
 }

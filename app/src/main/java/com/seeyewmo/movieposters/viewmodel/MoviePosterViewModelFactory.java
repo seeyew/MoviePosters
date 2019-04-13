@@ -1,6 +1,6 @@
 package com.seeyewmo.movieposters.viewmodel;
 
-import com.seeyewmo.movieposters.Respository.MoviePostersRepository;
+import com.seeyewmo.movieposters.respository.MoviePostersRepository;
 
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
