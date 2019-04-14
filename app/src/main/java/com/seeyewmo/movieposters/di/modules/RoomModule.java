@@ -1,4 +1,4 @@
-package com.seeyewmo.movieposters.di;
+package com.seeyewmo.movieposters.di.modules;
 
 import android.app.Application;
 
@@ -13,7 +13,7 @@ import dagger.Provides;
 
 @Module
 public class RoomModule {
-    public static final String DATABASE_NAME = "movies_db";
+    private static final String DATABASE_NAME = "movies_db";
 
     @Provides
     @Singleton

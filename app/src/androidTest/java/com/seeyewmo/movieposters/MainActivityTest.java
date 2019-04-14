@@ -9,10 +9,10 @@ import com.jakewharton.espresso.OkHttp3IdlingResource;
 import com.seeyewmo.movieposters.database.MoviePosterDAO;
 import com.seeyewmo.movieposters.database.MoviePosterDB;
 import com.seeyewmo.movieposters.di.AppComponent;
-import com.seeyewmo.movieposters.di.AppModule;
+import com.seeyewmo.movieposters.di.modules.AppModule;
 import com.seeyewmo.movieposters.di.DaggerAppComponent;
-import com.seeyewmo.movieposters.di.NetModule;
-import com.seeyewmo.movieposters.di.RoomModule;
+import com.seeyewmo.movieposters.di.modules.NetModule;
+import com.seeyewmo.movieposters.di.modules.RoomModule;
 import com.seeyewmo.movieposters.testutils.MockServerDispatcher;
 import com.seeyewmo.movieposters.testutils.StringHelpers;
 
@@ -20,40 +20,27 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.Request;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.inject.Singleton;
-
-import androidx.annotation.Nullable;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.espresso.Espresso;
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.IdlingResource;
-import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 import androidx.test.runner.AndroidJUnit4;
-import dagger.Component;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
-import okhttp3.mockwebserver.Dispatcher;
-import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
-import retrofit2.Retrofit;
 
-import static androidx.test.espresso.Espresso.closeSoftKeyboard;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.typeText;
-import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -77,26 +64,31 @@ public class MainActivityTest {
     @Before
     public void setupEnvironment() throws Exception {
         // Specify a valid string.
-        stringToBetyped = "Espresso";
+        stringToBetyped = "something\n";
+
+        // "Live" mock server that runs as localhost
         mockWebServer = new MockWebServer();
         mockWebServer.start(8080);
+        dispatcher = new MockServerDispatcher.RequestDispatcher();
+        mockWebServer.setDispatcher(dispatcher);
+
         AppComponent component =
                 DaggerAppComponent.builder()
                         .appModule(new AppModule(ApplicationProvider.getApplicationContext()))
                         .netModule(new ExpressoTestModule(mockWebServer.url("")
                                 .toString()))
                         .roomModule(new ExpressoRoomModule()).build();
-
         getApp().setComponent(component);
+
+        //Delete values to make sure we start fresh everytime
         component.moviePosterDAO().deleteOldMoviePosters("something");
+        //Make sure Espresso wait for http call to complete before ending tests
         resource = OkHttp3IdlingResource.create("OkHttp", component.httpclient());
         IdlingRegistry.getInstance().register(resource);
-        dispatcher = new MockServerDispatcher.RequestDispatcher();
-        mockWebServer.setDispatcher(dispatcher);
     }
 
     @After
-    public void shutdown() throws Exception{
+    public void shutdown() throws Exception {
         IdlingRegistry.getInstance().unregister(resource);
         mockWebServer.shutdown();
     }
@@ -104,46 +96,53 @@ public class MainActivityTest {
     @Test
     public void testNoResults() throws IOException {
         launchNewTaskActivity();
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("movies_not_found.json");
-        String notFound = StringHelpers.inputStreamToString(inputStream);//"{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
-        dispatcher.addResponse("/?s=something&apikey=", 200, notFound);
-
+        mockServerResultHelper("movies_not_found.json", 200);
 
         onView(withId(R.id.action_search)).perform(click());
-        onView(isAssignableFrom(AutoCompleteTextView.class)).perform(typeText("something\n"));
+        onView(isAssignableFrom(AutoCompleteTextView.class))
+                .perform(typeText(stringToBetyped));
 
-        onView(withId(R.id.status)).check(matches(withText(getResourceString(R.string.error, "Movie not found!"))));
-        onView (withId(R.id.recycler_view)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+        onView(withId(R.id.status)).check(
+                matches(withText(getResourceString(R.string.error, "Movie not found!"))));
+        onView(withId(R.id.recycler_view)).check(
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
     }
 
     @Test
     public void testTooManyResults() throws IOException {
         launchNewTaskActivity();
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("too_many_results.json");
-        String notFound = StringHelpers.inputStreamToString(inputStream);//"{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
-        dispatcher.addResponse("/?s=something&apikey=", 200, notFound);
-
+        mockServerResultHelper("too_many_results.json", 200);
 
         onView(withId(R.id.action_search)).perform(click());
-        onView(isAssignableFrom(AutoCompleteTextView.class)).perform(typeText("something\n"));
+        onView(isAssignableFrom(AutoCompleteTextView.class))
+                .perform(typeText(stringToBetyped));
 
-        onView(withId(R.id.status)).check(matches(withText(getResourceString(R.string.error, "Too many results."))));
-        onView (withId(R.id.recycler_view)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+        onView(withId(R.id.status)).check(
+                matches(withText(getResourceString(R.string.error, "Too many results."))));
+        onView(withId(R.id.recycler_view)).check(
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
     }
 
     @Test
-    public void testWithResults() throws IOException {
+    public void testRecyclerViewShowingResults() throws IOException {
         launchNewTaskActivity();
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("results_success.json");
-        String notFound = StringHelpers.inputStreamToString(inputStream);//"{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
-        dispatcher.addResponse("/?s=something&apikey=", 200, notFound);
-
+        mockServerResultHelper("results_success.json", 200);
 
         onView(withId(R.id.action_search)).perform(click());
-        onView(isAssignableFrom(AutoCompleteTextView.class)).perform(typeText("something\n"));
+        onView(isAssignableFrom(AutoCompleteTextView.class))
+                .perform(typeText(stringToBetyped));
 
-        onView(withId(R.id.recycler_view)).check(matches(isDisplayed()));
-        onView (withId(R.id.status)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+        onView(withId(R.id.recycler_view)).check(
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)));
+        onView(withId(R.id.status)).check(
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+    }
+
+    private void mockServerResultHelper(String resultJsonPath, int code) throws IOException {
+        InputStream inputStream = this.getClass().getClassLoader().
+                getResourceAsStream(resultJsonPath);
+        String resultString = StringHelpers.inputStreamToString(inputStream);
+        dispatcher.addResponse("/?s=something&apikey=", code, resultString);
     }
 
     private void launchNewTaskActivity() {
@@ -153,7 +152,6 @@ public class MainActivityTest {
 
         mActivityRule.launchActivity(intent);
     }
-
 
     private String getResourceString(int id, Object... formatArgs) {
         Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -166,7 +164,6 @@ public class MainActivityTest {
     }
 
     public static class ExpressoTestModule extends NetModule {
-
         ExpressoTestModule(String baseUrl) {
             super(baseUrl, "");
         }
@@ -179,7 +176,6 @@ public class MainActivityTest {
     }
 
     public static class ExpressoRoomModule extends RoomModule {
-
         public ExpressoRoomModule() {
             super();
         }

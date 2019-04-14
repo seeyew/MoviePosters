@@ -15,10 +15,9 @@ public class MoviePosterViewModelFactory implements ViewModelProvider.Factory {
 
     @Override
     public <T extends ViewModel> T create(Class<T> modelClass) {
-        MoviePosterViewModel vm = new MoviePosterViewModel(repository);
-        if (queryTerm != null) {
-            vm.searchText(queryTerm);
-        }
+        final MoviePosterViewModel vm = new MoviePosterViewModel(repository);
+        vm.searchText(queryTerm);
+
         return (T) vm;
     }
 }

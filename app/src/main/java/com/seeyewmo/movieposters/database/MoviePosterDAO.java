@@ -16,7 +16,7 @@ import androidx.room.Update;
 @Dao
 public interface MoviePosterDAO {
 
-    @Query("SELECT title, year, imdbId, type, poster, term FROM movieposter WHERE term= :term")
+    @Query("SELECT title, year, imdbId, type, poster, searchTerm FROM movieposter WHERE searchTerm= :term")
     LiveData<List<MoviePoster>> searchMoviePosters(String term);
 
     @Query("SELECT * FROM movieposter WHERE imdbId = :id")
@@ -26,7 +26,7 @@ public interface MoviePosterDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void bulkInsert(MoviePoster... moviePosters);
 
-    @Query("DELETE FROM movieposter WHERE term = :term")
+    @Query("DELETE FROM movieposter WHERE searchTerm = :term")
     void deleteOldMoviePosters(String term);
 
     @Query("DELETE FROM movieposter")

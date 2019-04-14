@@ -1,8 +1,8 @@
 package com.seeyewmo.movieposters.database;
 
 import com.seeyewmo.movieposters.dto.MoviePoster;
-import com.seeyewmo.movieposters.testutils.TestData;
 import com.seeyewmo.movieposters.testutils.LiveDataTestUtil;
+import com.seeyewmo.movieposters.testutils.TestData;
 
 import org.junit.After;
 import org.junit.Before;
@@ -18,7 +18,6 @@ import androidx.test.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
 import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -43,7 +42,6 @@ public class MoviePosterDAOTest {
                 // allowing main thread queries, just for testing
                 .allowMainThreadQueries()
                 .build();
-
         moviePosterDAO = database.moviePosterDAO();
     }
 
@@ -54,7 +52,8 @@ public class MoviePosterDAOTest {
 
     @Test
     public void getMoviePostersBeforeInsert() throws InterruptedException {
-        List<MoviePoster> moviePosters = LiveDataTestUtil.getValue(moviePosterDAO.searchMoviePosters("S"));
+        List<MoviePoster> moviePosters = LiveDataTestUtil.getValue(
+                moviePosterDAO.searchMoviePosters("S"));
 
         assertTrue(moviePosters.isEmpty());
     }
@@ -64,7 +63,8 @@ public class MoviePosterDAOTest {
     public void getMoviePostersAfterInsert() throws InterruptedException {
         moviePosterDAO.bulkInsert(TestData.POSTERS.stream().toArray(MoviePoster[]::new));
 
-        List<MoviePoster> moviePosters = LiveDataTestUtil.getValue(moviePosterDAO.searchMoviePosters(TestData.MOVIE_POSTER1.getTerm()));
+        List<MoviePoster> moviePosters = LiveDataTestUtil.getValue(
+                moviePosterDAO.searchMoviePosters(TestData.MOVIE_POSTER1.getSearchTerm()));
 
         assertThat(moviePosters.size(), is(1));
     }
@@ -73,7 +73,8 @@ public class MoviePosterDAOTest {
     public void getMoviePosterByImdbId() throws InterruptedException {
         moviePosterDAO.bulkInsert(TestData.POSTERS.stream().toArray(MoviePoster[]::new));
 
-        MoviePoster moviePoster = LiveDataTestUtil.getValue(moviePosterDAO.getMoviePosterByTerm(TestData.MOVIE_POSTER2.getImdbId()));
+        MoviePoster moviePoster = LiveDataTestUtil.getValue(
+                moviePosterDAO.getMoviePosterByTerm(TestData.MOVIE_POSTER2.getImdbId()));
 
         assertNotNull(moviePoster);
         assertEquals(TestData.MOVIE_POSTER2.getImdbId(), moviePoster.getImdbId());
@@ -86,7 +87,8 @@ public class MoviePosterDAOTest {
 
         moviePosterDAO.deleteOldMoviePosters(TestData.MOVIE_POSTER2.getImdbId());
 
-        List<MoviePoster> moviePoster = LiveDataTestUtil.getValue(moviePosterDAO.searchMoviePosters(TestData.MOVIE_POSTER2.getTerm()));
+        List<MoviePoster> moviePoster = LiveDataTestUtil.getValue(
+                moviePosterDAO.searchMoviePosters(TestData.MOVIE_POSTER2.getSearchTerm()));
         assertEquals(0, moviePoster.size() );
     }
 }

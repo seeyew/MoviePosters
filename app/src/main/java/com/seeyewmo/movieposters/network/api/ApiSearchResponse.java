@@ -1,9 +1,9 @@
-package com.seeyewmo.movieposters.api;
+package com.seeyewmo.movieposters.network.api;
 
 import com.google.gson.annotations.SerializedName;
 import com.seeyewmo.movieposters.dto.MoviePoster;
 
-public class SearchResult {
+public class ApiSearchResponse {
 
     @SerializedName("totalResults")
     private int totalResults;
@@ -16,7 +16,7 @@ public class SearchResult {
     @SerializedName("Error")
     private String error;
 
-    public SearchResult(int totalResults, boolean response) {
+    public ApiSearchResponse(int totalResults, boolean response) {
         this.totalResults = totalResults;
         this.response = response;
     }
@@ -25,7 +25,7 @@ public class SearchResult {
         return totalResults;
     }
 
-    boolean isSuccessful() {
+    public boolean isSuccessful() {
         return response;
     }
 
@@ -37,11 +37,11 @@ public class SearchResult {
         this.moviePosters = movies;
     }
 
-    String getError() {
+    public String getError() {
         return error;
     }
 
-    void setError(String error) {
+    public void setError(String error) {
         this.error = error;
     }
 }

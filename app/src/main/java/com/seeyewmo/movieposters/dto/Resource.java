@@ -1,5 +1,9 @@
 package com.seeyewmo.movieposters.dto;
 
+/**
+ * Generic wrapper for Transporting DTOs
+ * @param <T>
+ */
 public class Resource<T> {
     public enum Status {
         SUCCESS, ERROR, LOADING

@@ -8,32 +8,33 @@ import androidx.room.PrimaryKey;
 
 @Entity
 public class MoviePoster {
-//    @PrimaryKey(autoGenerate = true)
-//    private int id;
-    private String term;
-    @SerializedName("Title")
-    private String title;
-    @SerializedName("Year")
-    private String year;
-    @PrimaryKey
+
     @NonNull
+    @PrimaryKey
     @SerializedName("imdbID")
     private String imdbId;
+
+    @SerializedName("Title")
+    private String title;
+
+    @SerializedName("Year")
+    private String year;
+
+
     @SerializedName("Type")
     private String type;
+
     @SerializedName("Poster")
     private String poster;
 
-//    public int getId() { return id; }
-//
-//    public void setId(int id) { this.id = id; }
+    private String searchTerm;
 
-    public String getTerm() {
-        return term;
+    public String getSearchTerm() {
+        return searchTerm;
     }
 
-    public void setTerm(String term) {
-        this.term = term;
+    public void setSearchTerm(String searchTerm) {
+        this.searchTerm = searchTerm;
     }
 
     public String getTitle() {

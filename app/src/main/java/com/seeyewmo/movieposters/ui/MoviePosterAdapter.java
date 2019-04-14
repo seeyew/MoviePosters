@@ -12,15 +12,13 @@ import com.seeyewmo.movieposters.R;
 import com.seeyewmo.movieposters.dto.MoviePoster;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
-    private static final String TAG = "MovieSearchAdapter";
+    private static final String TAG = "MoviePosterAdapter";
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         View mItemView;
@@ -78,13 +76,14 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
                 .centerCrop()
                 .into(holder.mPosterImageView);
 
-        final String id = poster.getImdbId();
-        holder.mItemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // On click, we should open the item with the id
-            }
-        });
+        //TODO: Handle click on the item
+//        final String id = poster.getImdbId();
+//        holder.mItemView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                // On click, we should open the item with the id
+//            }
+//        });
     }
 
     @Override

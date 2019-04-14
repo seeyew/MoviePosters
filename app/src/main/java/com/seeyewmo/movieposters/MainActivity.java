@@ -1,17 +1,5 @@
 package com.seeyewmo.movieposters;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
-import androidx.lifecycle.ViewModelProviders;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -23,23 +11,24 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.widget.TextView;
 
-import com.seeyewmo.movieposters.api.MovieWebService;
-import com.seeyewmo.movieposters.api.SearchResult;
-import com.seeyewmo.movieposters.respository.MoviePostersRepository;
-import com.seeyewmo.movieposters.api.NetworkDataSource;
-import com.seeyewmo.movieposters.database.MoviePosterDB;
 import com.seeyewmo.movieposters.dto.Resource;
+import com.seeyewmo.movieposters.respository.MoviePostersRepository;
 import com.seeyewmo.movieposters.ui.MoviePosterAdapter;
 import com.seeyewmo.movieposters.viewmodel.MoviePosterViewModel;
 import com.seeyewmo.movieposters.viewmodel.MoviePosterViewModelFactory;
 
-import java.util.concurrent.Executors;
-
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-//    private static final String DATABASE_NAME = "movies_db";
+    private static final String QUERY_KEY = "query";
 
     @Inject
     MoviePostersRepository repository;
@@ -48,21 +37,28 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private MoviePosterAdapter mAdapter;
     private TextView resultView;
+    private SearchView searchView;
     private String queryTerm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        //Dagger injection code here
         ((MoviePosterApplication) getApplication()).getAppComponent().inject(this);
 
         setContentView(R.layout.activity_main);
 
-//        movieDatabase = Room.databaseBuilder(getApplicationContext(),
-//                MoviePosterDB.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
+        queryTerm = null;
+        //Handle previous queryTerm if process got killed
+        if (savedInstanceState != null) {
+            queryTerm = savedInstanceState.getString(QUERY_KEY, null);
+            if (!TextUtils.isEmpty(queryTerm)) {
+                searchView.setQuery(queryTerm, false);
+            }
+        }
+
         viewModel = ViewModelProviders.of(this,
-                new MoviePosterViewModelFactory(repository,
-                        savedInstanceState == null ? null : savedInstanceState.getString(QUERY_KEY)))
+                new MoviePosterViewModelFactory(repository, queryTerm))
                 .get(MoviePosterViewModel.class);
 
         resultView = findViewById(R.id.status);
@@ -73,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel.getResults().observe(this, searchResponse -> {
             if (searchResponse.getStatus() == Resource.Status.SUCCESS) {
-
                 //TODO this might have to be moved into viewmodel
                 if (searchResponse.getData().size() > 0) {
                     mRecyclerView.setVisibility(View.VISIBLE);
@@ -100,6 +95,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        if (!TextUtils.isEmpty(queryTerm)) {
+            //Save query key in case our process got killed.
+            outState.putString(QUERY_KEY, queryTerm);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.options_menu, menu);
@@ -107,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         // Associate searchable configuration with the SearchView
         SearchManager searchManager =
                 (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView =
+        searchView =
                 (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
@@ -129,14 +133,5 @@ public class MainActivity extends AppCompatActivity {
             viewModel.searchText(query);
             mAdapter.clearData();
         }
-    }
-
-    private static final String QUERY_KEY = "query";
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        if (!TextUtils.isEmpty(queryTerm)) {
-            outState.putString(QUERY_KEY, queryTerm);
-        }
-        super.onSaveInstanceState(outState);
     }
 }

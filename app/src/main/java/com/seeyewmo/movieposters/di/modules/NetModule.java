@@ -1,4 +1,4 @@
-package com.seeyewmo.movieposters.di;
+package com.seeyewmo.movieposters.di.modules;
 
 import android.app.Application;
 

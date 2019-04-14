@@ -1,6 +1,6 @@
 package com.seeyewmo.movieposters.respository;
 
-import com.seeyewmo.movieposters.api.NetworkDataSource;
+import com.seeyewmo.movieposters.network.NetworkDataSource;
 import com.seeyewmo.movieposters.database.MoviePosterDAO;
 import com.seeyewmo.movieposters.dto.MoviePoster;
 import com.seeyewmo.movieposters.dto.Resource;
@@ -31,6 +31,14 @@ public class MoviePostersRepository {
         this.executor = executor;
     }
 
+    /**
+     * Search MoviePosters by term. This function returns data from Room Database. If there's no
+     * data, we will download from the server.
+     *
+     * TODO: Need to implement cache expiration
+     * @param term
+     * @return LiveData of a Resource<List<MoviePoster>>. Guaranteeed to not be null.
+     */
     public LiveData<Resource<List<MoviePoster>>> searchMoviePosters(final String term) {
         final MediatorLiveData<Resource<List<MoviePoster>>> result = new MediatorLiveData<>();
         if (term == null || term.length() == 0) {
@@ -40,7 +48,7 @@ public class MoviePostersRepository {
 
         final LiveData<List<MoviePoster>> source = moviePosterDAO.searchMoviePosters(term);
 
-        //We need to wrap resource in resource
+        //We need to wrap result in resource
         result.addSource(source, moviePosters -> {
             if (moviePosters.size() > 0) {
                 result.postValue(Resource.success(moviePosters));
@@ -60,7 +68,7 @@ public class MoviePostersRepository {
                 executor.execute(() -> {
                     MoviePoster[] posters = data.getData().getMoviePosters();
                     for (MoviePoster poster : posters) {
-                        poster.setTerm(term);
+                        poster.setSearchTerm(term);
                     }
                     moviePosterDAO.bulkInsert(posters);
                 });
@@ -68,6 +76,5 @@ public class MoviePostersRepository {
                 result.postValue(Resource.error(data.getError(), null));
             }
         });
-
     }
 }

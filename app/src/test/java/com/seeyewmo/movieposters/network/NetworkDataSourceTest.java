@@ -1,6 +1,6 @@
-package com.seeyewmo.movieposters.api;
+package com.seeyewmo.movieposters.network;
 
-import com.seeyewmo.movieposters.di.NetModule;
+import com.seeyewmo.movieposters.di.modules.NetModule;
 import com.seeyewmo.movieposters.testutils.MockServerDispatcher;
 import com.seeyewmo.movieposters.testutils.StringHelpers;
 
@@ -27,8 +27,6 @@ import okhttp3.mockwebserver.MockWebServer;
 import retrofit2.Retrofit;
 import retrofit2.mock.NetworkBehavior;
 
-import static org.mockito.Mockito.verify;
-
 public class NetworkDataSourceTest {
 
     @Rule
@@ -40,7 +38,7 @@ public class NetworkDataSourceTest {
     private MockWebServer mockWebServer;
     private NetworkDataSource datasource;
     private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
-    private MockServerDispatcher.ErrorDispatcher dispatcher;
+
 
     @Before
     public void setUp() throws Exception {
@@ -51,7 +49,6 @@ public class NetworkDataSourceTest {
         retrofit = netModule.provideRetrofit(netModule.provideOkHttpClient(null));
         //TODO: We can use Dagger in the future here, but this is not necessary at the moment
         datasource = new NetworkDataSource(retrofit);
-        dispatcher = new MockServerDispatcher.ErrorDispatcher();
     }
 
     @After
@@ -61,13 +58,12 @@ public class NetworkDataSourceTest {
 
     @Test
     public void testTooManyResults() throws Exception {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("too_many_results.json");
-        mockWebServer.enqueue(new MockResponse().setBody(StringHelpers.inputStreamToString(inputStream)));
+        mockServerHelper("too_many_results.json");
 
         CountDownLatch latch = new CountDownLatch(1);
-        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
+        datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
-            public void onResponse(SearchResponse data) {
+            public void onResponse(SearchResult data) {
                 Assert.assertEquals("1", data.getTerm());
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
@@ -80,37 +76,34 @@ public class NetworkDataSourceTest {
 
     @Test
     public void testMovieNotFound() throws Exception {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("movies_not_found.json");
-        mockWebServer.enqueue(new MockResponse().setBody(StringHelpers.inputStreamToString(inputStream)));
+        mockServerHelper("movies_not_found.json");
 
         CountDownLatch latch = new CountDownLatch(1);
-        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
+        datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
-            public void onResponse(SearchResponse data) {
+            public void onResponse(SearchResult data) {
                 Assert.assertEquals("1", data.getTerm());
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
                 latch.countDown();
             }
         });
-
         latch.await();
     }
 
     @Test
     public void testClientError() throws Exception {
-        mockWebServer.setDispatcher(dispatcher);
+        mockWebServer.setDispatcher(new MockServerDispatcher.ErrorDispatcher());
         CountDownLatch latch = new CountDownLatch(1);
-        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
+        datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
-            public void onResponse(SearchResponse data) {
+            public void onResponse(SearchResult data) {
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
                 Assert.assertEquals("Client Error", data.getError());
                 latch.countDown();
             }
         });
-
         latch.await();
     }
 
@@ -120,22 +113,20 @@ public class NetworkDataSourceTest {
         mockWebServer.shutdown();
 
         CountDownLatch latch = new CountDownLatch(1);
-        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
+        datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
-            public void onResponse(SearchResponse data) {
+            public void onResponse(SearchResult data) {
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
                 latch.countDown();
             }
         });
-
         latch.await();
     }
 
     @Test
     public void testGoodResults() throws Exception {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("results_success.json");
-        mockWebServer.enqueue(new MockResponse().setBody(StringHelpers.inputStreamToString(inputStream)));
+        mockServerHelper("results_success.json");
 
         CountDownLatch latch = new CountDownLatch(1);
         datasource.searchWithCallback("1", data -> {
@@ -147,7 +138,13 @@ public class NetworkDataSourceTest {
         });
 
         latch.await();
+    }
 
+    private void mockServerHelper(String resultFilePath) throws IOException {
+        InputStream inputStream = this.getClass().getClassLoader()
+                .getResourceAsStream(resultFilePath);
+        mockWebServer.enqueue(new MockResponse().setBody(
+                StringHelpers.inputStreamToString(inputStream)));
     }
 
     private static class TestModule extends NetModule {

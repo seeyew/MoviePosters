@@ -19,7 +19,7 @@ public class TestData {
             String value = Integer.toString(i);
             current = POSTERS.get(i);
             current.setImdbId(value);
-            current.setTerm(value);
+            current.setSearchTerm(value);
             current.setPoster("");
             current.setTitle(value);
             current.setType(value);

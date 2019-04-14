@@ -21,8 +21,6 @@ import androidx.lifecycle.Observer;
 import static org.mockito.Mockito.when;
 
 public class ViewModelTest {
-    //https://github.com/ericntd/Github-Search/blob/step-2-mvvm-databinding/app/src/test/java/tech/ericntd/githubsearch/search/SearchViewModelTest.java
-
     @Rule
     public TestRule rule = new InstantTaskExecutorRule();
 
@@ -36,18 +34,15 @@ public class ViewModelTest {
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);// required for the "@Mock" annotations
+        MockitoAnnotations.initMocks(this);
 
-        // Make viewModel a mock while using mock repository and viewContract created above
-//        viewModel = Mockito.spy(new MoviePosterViewModel(repository));
         viewModel = new MoviePosterViewModel(repository);
-
-        //Need to do this to ensure MediatorliveData broadcast an event.
+        //Need to do this to ensure MediatorLiveData broadcast an event.
         viewModel.getResults().observeForever(observer);
     }
 
     @Test
-    public void searchMoviePoster_noQuery() {
+    public void testSearchWithEmptyTextReturnsQuickly() {
         String searchQuery = null;
 
         // Trigger
@@ -59,7 +54,7 @@ public class ViewModelTest {
     }
 
     @Test
-    public void searchGitHubRepos() {
+    public void testSearchTextTriggersRepositoryCall() {
         String searchQuery = "test query";
         when(repository.searchMoviePosters(searchQuery)).thenReturn(Mockito.mock(LiveData.class));
         // Trigger

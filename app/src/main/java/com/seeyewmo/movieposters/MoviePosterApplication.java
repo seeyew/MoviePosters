@@ -3,16 +3,13 @@ package com.seeyewmo.movieposters;
 import android.app.Application;
 
 import com.seeyewmo.movieposters.di.AppComponent;
-import com.seeyewmo.movieposters.di.AppModule;
+import com.seeyewmo.movieposters.di.modules.AppModule;
 import com.seeyewmo.movieposters.di.DaggerAppComponent;
-import com.seeyewmo.movieposters.di.NetModule;
-import com.seeyewmo.movieposters.di.RoomModule;
-
-import retrofit2.Retrofit;
+import com.seeyewmo.movieposters.di.modules.NetModule;
+import com.seeyewmo.movieposters.di.modules.RoomModule;
 
 public class MoviePosterApplication extends Application {
-    // https://github.com/codepath/android_guides/wiki/Dependency-Injection-with-Dagger-2
-    private static Retrofit retrofit;
+    //TODO: For release, these information should be stored as resources and gradle BuildConfigs
     private static final String API = "http://www.omdbapi.com/";
     private static final String API_KEY = "82c4cc71";
 
@@ -23,8 +20,8 @@ public class MoviePosterApplication extends Application {
         super.onCreate();
 
         setComponent(DaggerAppComponent.builder()
-                // list of modules that are part of this component need to be created here too
-                .appModule(new AppModule(this)) // This also corresponds to the name of your module: %component_name%Module
+                // This also corresponds to the name of your module: %component_name%Module
+                .appModule(new AppModule(this))
                 .netModule(new NetModule(API, API_KEY))
                 .roomModule(new RoomModule())
                 .build());
