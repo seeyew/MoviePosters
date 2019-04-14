@@ -1,11 +1,8 @@
 package com.seeyewmo.movieposters.api;
 
-import com.seeyewmo.movieposters.MainActivity;
-import com.seeyewmo.movieposters.MoviePosterApplication;
-import com.seeyewmo.movieposters.di.AppComponent;
 import com.seeyewmo.movieposters.di.NetModule;
-import com.seeyewmo.movieposters.dto.MoviePoster;
-import com.seeyewmo.movieposters.utils.StringHelpers;
+import com.seeyewmo.movieposters.testutils.MockServerDispatcher;
+import com.seeyewmo.movieposters.testutils.StringHelpers;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -13,51 +10,37 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
-import dagger.Component;
 import okhttp3.Cache;
-import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.mock.BehaviorDelegate;
-import retrofit2.mock.MockRetrofit;
 import retrofit2.mock.NetworkBehavior;
 
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class NetworkDataSourceTest {
 
     @Rule
     public TestRule rule = new InstantTaskExecutorRule();
 
-    private MockWebServer mockWebServer;
     @Inject
     private Retrofit retrofit;
+
+    private MockWebServer mockWebServer;
     private NetworkDataSource datasource;
     private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
+    private MockServerDispatcher.ErrorDispatcher dispatcher;
 
     @Before
     public void setUp() throws Exception {
@@ -66,7 +49,9 @@ public class NetworkDataSourceTest {
         mockWebServer.start();
         TestModule netModule = new TestModule(mockWebServer.url("").toString());
         retrofit = netModule.provideRetrofit(netModule.provideOkHttpClient(null));
+        //TODO: We can use Dagger in the future here, but this is not necessary at the moment
         datasource = new NetworkDataSource(retrofit);
+        dispatcher = new MockServerDispatcher.ErrorDispatcher();
     }
 
     @After
@@ -113,9 +98,38 @@ public class NetworkDataSourceTest {
     }
 
     @Test
-    public void testNetworkFailure() throws Exception {
-       // TODO
+    public void testClientError() throws Exception {
+        mockWebServer.setDispatcher(dispatcher);
+        CountDownLatch latch = new CountDownLatch(1);
+        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
+            @Override
+            public void onResponse(SearchResponse data) {
+                Assert.assertFalse(data.isSuccess());
+                Assert.assertNull(data.getData());
+                Assert.assertEquals("Client Error", data.getError());
+                latch.countDown();
+            }
+        });
 
+        latch.await();
+    }
+
+    @Test
+    public void testNetworkFailure() throws Exception {
+        //Shut down the server to simulate connection error!
+        mockWebServer.shutdown();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
+            @Override
+            public void onResponse(SearchResponse data) {
+                Assert.assertFalse(data.isSuccess());
+                Assert.assertNull(data.getData());
+                latch.countDown();
+            }
+        });
+
+        latch.await();
     }
 
     @Test

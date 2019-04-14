@@ -26,7 +26,7 @@ public class NetworkDataSource {
 
     @Inject
     public NetworkDataSource(Retrofit retrofit) {
-        // Create an instance of our GitHub API interface.
+        // Create an instance of our MovieWebService API interface.
         webService = retrofit.create(MovieWebService.class);
     }
 
@@ -42,10 +42,10 @@ public class NetworkDataSource {
             public void onResponse(Call<SearchResult> call, retrofit2.Response<SearchResult> response) {
                 if (callback != null) {
                     SearchResult result = response.body();
-                    if (result.isSuccessful()) {
+                    if (response.isSuccessful() && result.isSuccessful()) {
                         callback.onResponse(SearchResponse.success(key, result));
                     } else {
-                        callback.onResponse(SearchResponse.fail(key, result.getError()));
+                        callback.onResponse(SearchResponse.fail(key, result != null ?result.getError() : response.message()));
                     }
                 }
             }

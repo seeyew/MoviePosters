@@ -1,9 +1,8 @@
 package com.seeyewmo.movieposters.database;
 
-import android.database.sqlite.SQLiteConstraintException;
-
 import com.seeyewmo.movieposters.dto.MoviePoster;
-import com.seeyewmo.movieposters.util.LiveDataTestUtil;
+import com.seeyewmo.movieposters.testutils.TestData;
+import com.seeyewmo.movieposters.testutils.LiveDataTestUtil;
 
 import org.junit.After;
 import org.junit.Before;

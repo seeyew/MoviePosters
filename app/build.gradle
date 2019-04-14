@@ -16,13 +16,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
         compileOptions.incremental = false
     }
-
+    sourceSets {
+        String sharedTestDir = 'src/testutils/java'
+        String resourceTestDir = "src/testutils/resources"
+        test {
+            java.srcDirs += sharedTestDir
+            resources.srcDirs += resourceTestDir
+        }
+        androidTest {
+            java.srcDirs += sharedTestDir
+            resources.srcDirs += resourceTestDir
+        }
+    }
 
 }
 

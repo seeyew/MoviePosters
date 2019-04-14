@@ -13,12 +13,18 @@ import com.seeyewmo.movieposters.di.AppModule;
 import com.seeyewmo.movieposters.di.DaggerAppComponent;
 import com.seeyewmo.movieposters.di.NetModule;
 import com.seeyewmo.movieposters.di.RoomModule;
+import com.seeyewmo.movieposters.testutils.MockServerDispatcher;
+import com.seeyewmo.movieposters.testutils.StringHelpers;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.Request;
 import org.junit.runner.RunWith;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.inject.Singleton;
 
@@ -29,6 +35,7 @@ import androidx.test.espresso.Espresso;
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.IdlingResource;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
+import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
@@ -46,8 +53,11 @@ import static androidx.test.espresso.Espresso.closeSoftKeyboard;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
@@ -62,7 +72,7 @@ public class MainActivityTest {
     private String stringToBetyped;
     private MockWebServer mockWebServer;
     private IdlingResource resource;
-
+    private MockServerDispatcher.RequestDispatcher dispatcher;
 
     @Before
     public void setupEnvironment() throws Exception {
@@ -81,7 +91,8 @@ public class MainActivityTest {
         component.moviePosterDAO().deleteOldMoviePosters("something");
         resource = OkHttp3IdlingResource.create("OkHttp", component.httpclient());
         IdlingRegistry.getInstance().register(resource);
-
+        dispatcher = new MockServerDispatcher.RequestDispatcher();
+        mockWebServer.setDispatcher(dispatcher);
     }
 
     @After
@@ -91,17 +102,48 @@ public class MainActivityTest {
     }
 
     @Test
-    public void no_results() {
+    public void testNoResults() throws IOException {
         launchNewTaskActivity();
-        String notFound = "{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
-//        mockWebServer.enqueue(new MockResponse().setBody(notFound));
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("movies_not_found.json");
+        String notFound = StringHelpers.inputStreamToString(inputStream);//"{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
+        dispatcher.addResponse("/?s=something&apikey=", 200, notFound);
 
-        mockWebServer.setDispatcher(new MockServerDispatcher().new RequestDispatcher(notFound));
 
         onView(withId(R.id.action_search)).perform(click());
         onView(isAssignableFrom(AutoCompleteTextView.class)).perform(typeText("something\n"));
 
         onView(withId(R.id.status)).check(matches(withText(getResourceString(R.string.error, "Movie not found!"))));
+        onView (withId(R.id.recycler_view)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+    }
+
+    @Test
+    public void testTooManyResults() throws IOException {
+        launchNewTaskActivity();
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("too_many_results.json");
+        String notFound = StringHelpers.inputStreamToString(inputStream);//"{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
+        dispatcher.addResponse("/?s=something&apikey=", 200, notFound);
+
+
+        onView(withId(R.id.action_search)).perform(click());
+        onView(isAssignableFrom(AutoCompleteTextView.class)).perform(typeText("something\n"));
+
+        onView(withId(R.id.status)).check(matches(withText(getResourceString(R.string.error, "Too many results."))));
+        onView (withId(R.id.recycler_view)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+    }
+
+    @Test
+    public void testWithResults() throws IOException {
+        launchNewTaskActivity();
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("results_success.json");
+        String notFound = StringHelpers.inputStreamToString(inputStream);//"{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
+        dispatcher.addResponse("/?s=something&apikey=", 200, notFound);
+
+
+        onView(withId(R.id.action_search)).perform(click());
+        onView(isAssignableFrom(AutoCompleteTextView.class)).perform(typeText("something\n"));
+
+        onView(withId(R.id.recycler_view)).check(matches(isDisplayed()));
+        onView (withId(R.id.status)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
     }
 
     private void launchNewTaskActivity() {
@@ -168,44 +210,4 @@ public class MainActivityTest {
 //        //void inject(MainActivityTest activity);
 //        // void inject(MyService service);
 //    }
-
-    class MockServerDispatcher {
-
-        /**
-         * Return ok response from mock server
-         */
-        class RequestDispatcher extends Dispatcher {
-            String result;
-            RequestDispatcher(String result) {
-                this.result = result;
-            }
-
-            @Override
-            public MockResponse dispatch(RecordedRequest request) {
-
-//                if(request.getPath().equals("api/data")){
-//                    return new MockResponse().setResponseCode(200).setBody("{data:FakeData}");
-//                }else if(request.getPath().equals("api/codes")){
-//                    return new MockResponse().setResponseCode(200).setBody("{codes:FakeCode}");
-//                }else if(request.getPath().equals("api/number"))
-//                    return new MockResponse().setResponseCode(200).setBody("number:FakeNumber");
-
-                return new MockResponse().setResponseCode(200).setBody(result);
-//                return new MockResponse().setResponseCode(404);
-            }
-        }
-
-        /**
-         * Return error response from mock server
-         */
-        class ErrorDispatcher extends Dispatcher {
-
-            @Override
-            public MockResponse dispatch(RecordedRequest request) {
-
-                return new MockResponse().setResponseCode(400);
-
-            }
-        }
-    }
 }

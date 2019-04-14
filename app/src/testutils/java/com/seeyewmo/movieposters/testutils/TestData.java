@@ -1,4 +1,4 @@
-package com.seeyewmo.movieposters.database;
+package com.seeyewmo.movieposters.testutils;
 
 import com.seeyewmo.movieposters.dto.MoviePoster;
 
@@ -7,10 +7,10 @@ import java.util.List;
 
 public class TestData {
 
-    static final MoviePoster MOVIE_POSTER1 = new MoviePoster();
-    static final MoviePoster MOVIE_POSTER2 = new MoviePoster();
+    public static final MoviePoster MOVIE_POSTER1 = new MoviePoster();
+    public static final MoviePoster MOVIE_POSTER2 = new MoviePoster();
 
-    static final List<MoviePoster> POSTERS = Arrays.asList(MOVIE_POSTER1, MOVIE_POSTER2);
+    public static final List<MoviePoster> POSTERS = Arrays.asList(MOVIE_POSTER1, MOVIE_POSTER2);
 
     static {
 

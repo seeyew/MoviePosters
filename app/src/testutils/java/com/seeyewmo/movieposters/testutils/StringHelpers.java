@@ -1,4 +1,4 @@
-package com.seeyewmo.movieposters.utils;
+package com.seeyewmo.movieposters.testutils;
 
 import android.content.Context;
 

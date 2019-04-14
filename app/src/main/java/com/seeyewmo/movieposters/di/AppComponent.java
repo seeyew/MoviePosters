@@ -15,8 +15,8 @@ import okhttp3.OkHttpClient;
 @Component(modules={AppModule.class, NetModule.class, RoomModule.class})
 public interface AppComponent {
     void inject(MainActivity activity);
-    // void inject(MyFragment fragment);
-    // void inject(MyService service);
+    // void inject(MainActivityTest test);
+
     MoviePosterDAO moviePosterDAO();
     MoviePosterDB moviePosterDB();
     MoviePostersRepository repository();

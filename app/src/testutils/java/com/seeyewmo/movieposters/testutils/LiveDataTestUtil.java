@@ -1,4 +1,4 @@
-package com.seeyewmo.movieposters.util;
+package com.seeyewmo.movieposters.testutils;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
