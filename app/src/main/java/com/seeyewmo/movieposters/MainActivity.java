@@ -68,9 +68,11 @@ public class MainActivity extends AppCompatActivity {
             if (searchResponse.getStatus() == Resource.Status.SUCCESS) {
                 //TODO this might have to be moved into viewmodel
                 if (searchResponse.getData().size() > 0) {
+                    Log.d(TAG, "There's data, show recycler view");
                     mRecyclerView.setVisibility(View.VISIBLE);
                     resultView.setVisibility(View.GONE);
                 } else {
+                    Log.d(TAG, "No data, show no results");
                     mRecyclerView.setVisibility(View.GONE);
                     resultView.setVisibility(View.VISIBLE);
                     resultView.setText(R.string.no_results);
@@ -84,8 +86,10 @@ public class MainActivity extends AppCompatActivity {
             resultView.setVisibility(View.VISIBLE);
 
             if (searchResponse.getStatus() == Resource.Status.ERROR){
+                Log.d(TAG, "Error, show error message");
                 resultView.setText(getString(R.string.error, searchResponse.getException()));
             } else {
+                Log.d(TAG, "Show loading");
                 resultView.setText(getString(R.string.loading));
             }
         });
@@ -95,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         if (!TextUtils.isEmpty(queryTerm)) {
             //Save query key in case our process got killed.
+            Log.d(TAG, "Saving Query Term.." + queryTerm);
             outState.putString(QUERY_KEY, queryTerm);
         }
         super.onSaveInstanceState(outState);

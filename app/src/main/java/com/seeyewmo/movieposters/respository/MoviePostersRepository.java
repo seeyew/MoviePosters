@@ -1,5 +1,7 @@
 package com.seeyewmo.movieposters.respository;
 
+import android.util.Log;
+
 import com.seeyewmo.movieposters.network.NetworkDataSource;
 import com.seeyewmo.movieposters.database.MoviePosterDAO;
 import com.seeyewmo.movieposters.dto.MoviePoster;
@@ -18,7 +20,7 @@ import androidx.lifecycle.MutableLiveData;
 
 @Singleton
 public class MoviePostersRepository {
-
+    private static final String TAG = MoviePostersRepository.class.getSimpleName();
     private final NetworkDataSource networkDataSource;
     private final MoviePosterDAO moviePosterDAO;
     private final Executor executor;
@@ -51,6 +53,7 @@ public class MoviePostersRepository {
         //We need to wrap result in resource
         result.addSource(source, moviePosters -> {
             if (moviePosters.size() > 0) {
+                Log.d(TAG, "Returning cache results");
                 result.postValue(Resource.success(moviePosters));
             } else {
                fetchFromNetwork(result, term);
@@ -66,6 +69,7 @@ public class MoviePostersRepository {
         networkDataSource.searchWithCallback(term, data ->  {
             if (data.isSuccess()) {
                 executor.execute(() -> {
+                    Log.d(TAG, "Caching online results");
                     MoviePoster[] posters = data.getData().getMoviePosters();
                     for (MoviePoster poster : posters) {
                         poster.setSearchTerm(term);
@@ -73,6 +77,7 @@ public class MoviePostersRepository {
                     moviePosterDAO.bulkInsert(posters);
                 });
             } else {
+                Log.d(TAG, "Online download failed");
                 result.postValue(Resource.error(data.getError(), null));
             }
         });

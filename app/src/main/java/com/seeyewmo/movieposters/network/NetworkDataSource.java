@@ -1,5 +1,7 @@
 package com.seeyewmo.movieposters.network;
 
+import android.util.Log;
+
 import com.seeyewmo.movieposters.network.api.MovieWebService;
 import com.seeyewmo.movieposters.network.api.ApiSearchResponse;
 
@@ -13,7 +15,7 @@ import retrofit2.Retrofit;
 
 @Singleton
 public class NetworkDataSource {
-
+    private static final String TAG = NetworkDataSource.class.getSimpleName();
     private final MovieWebService webService;
     private Call<ApiSearchResponse> searchResultCall;
 
@@ -37,8 +39,10 @@ public class NetworkDataSource {
                 if (callback != null) {
                     ApiSearchResponse result = response.body();
                     if (response.isSuccessful() && result != null && result.isSuccessful()) {
+                        Log.d(TAG, "Success returned from Retrofit");
                         callback.onResponse(SearchResult.success(key, result));
                     } else {
+                        Log.d(TAG, "Failure returned from Retrofit");
                         callback.onResponse(SearchResult.fail(key, result != null ?
                                 result.getError() : response.message()));
                     }
@@ -49,6 +53,7 @@ public class NetworkDataSource {
             public void onFailure(Call<ApiSearchResponse> call, Throwable t) {
                 if (!call.isCanceled() && callback != null) {
                     //Only post result if it's cancelled
+                    Log.d(TAG, "Failure returned by Retrofit" + t.getLocalizedMessage());
                     callback.onResponse(SearchResult.fail(key,t.getLocalizedMessage()));
                 }
             }
