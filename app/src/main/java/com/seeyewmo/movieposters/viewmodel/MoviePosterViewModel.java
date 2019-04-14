@@ -6,6 +6,8 @@ import com.seeyewmo.movieposters.dto.Resource;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;

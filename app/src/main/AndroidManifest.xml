@@ -14,6 +14,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         android:name=".MoviePosterApplication">
+
         <activity android:name=".MainActivity"
             android:launchMode="singleTop">
             <intent-filter>

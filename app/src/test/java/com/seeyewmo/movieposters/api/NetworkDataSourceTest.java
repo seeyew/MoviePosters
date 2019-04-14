@@ -2,6 +2,8 @@ package com.seeyewmo.movieposters.api;
 
 import com.seeyewmo.movieposters.MainActivity;
 import com.seeyewmo.movieposters.MoviePosterApplication;
+import com.seeyewmo.movieposters.di.AppComponent;
+import com.seeyewmo.movieposters.di.NetModule;
 import com.seeyewmo.movieposters.dto.MoviePoster;
 import com.seeyewmo.movieposters.utils.StringHelpers;
 
@@ -23,7 +25,11 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+import dagger.Component;
 import okhttp3.Cache;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
@@ -48,6 +54,7 @@ public class NetworkDataSourceTest {
     public TestRule rule = new InstantTaskExecutorRule();
 
     private MockWebServer mockWebServer;
+    @Inject
     private Retrofit retrofit;
     private NetworkDataSource datasource;
     private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
@@ -56,10 +63,9 @@ public class NetworkDataSourceTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         mockWebServer = new MockWebServer();
-
-        retrofit = MoviePosterApplication.buildRetrofit(MoviePosterApplication.getOkhttpClient(null),
-                mockWebServer.url("").toString());
-//        service = retrofit.create(MovieWebService.class);
+        mockWebServer.start();
+        TestModule netModule = new TestModule(mockWebServer.url("").toString());
+        retrofit = netModule.provideRetrofit(netModule.provideOkHttpClient(null));
         datasource = new NetworkDataSource(retrofit);
     }
 
@@ -71,6 +77,25 @@ public class NetworkDataSourceTest {
     @Test
     public void testTooManyResults() throws Exception {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("too_many_results.json");
+        mockWebServer.enqueue(new MockResponse().setBody(StringHelpers.inputStreamToString(inputStream)));
+
+        CountDownLatch latch = new CountDownLatch(1);
+        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
+            @Override
+            public void onResponse(SearchResponse data) {
+                Assert.assertEquals("1", data.getTerm());
+                Assert.assertFalse(data.isSuccess());
+                Assert.assertNull(data.getData());
+                latch.countDown();
+            }
+        });
+
+        latch.await();
+    }
+
+    @Test
+    public void testMovieNotFound() throws Exception {
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("movies_not_found.json");
         mockWebServer.enqueue(new MockResponse().setBody(StringHelpers.inputStreamToString(inputStream)));
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -111,33 +136,20 @@ public class NetworkDataSourceTest {
 
     }
 
-//    @Test
-//    public void testSearchApi() throws InterruptedException {
-//        final Call<SearchResult> searchResultCall = Mockito.mock(Call.class);
-//        final SearchResult searchResult = Mockito.mock(SearchResult.class);
-//        when(searchResult.isSuccessful()).thenReturn(true);
-//
-//        doAnswer(new Answer() {
-//            @Override
-//            public Object answer(InvocationOnMock invocation) throws Throwable {
-//                ((Callback<SearchResult>)invocation.getArgument(0))
-//                        .onResponse(searchResultCall, Response.success(searchResult));
-//                return null;
-//            }
-//        }).when(searchResultCall).enqueue(Mockito.any());
-//
-//        CountDownLatch latch = new CountDownLatch(1);
-//        datasource.searchWithCallback("1", new NetworkCallback<SearchResponse>() {
-//            @Override
-//            public void onResponse(SearchResponse data) {
-//                Assert.assertEquals("1", data.getTerm());
-//                Assert.assertEquals(searchResult, data.getData());
-//                latch.countDown();
-//            }
-//        });
-//
-//        latch.await();
-//
-////        verify(webService, times(1)).searchPoster("1");
-//    }
+    private static class TestModule extends NetModule {
+
+        TestModule(String baseUrl) {
+            super(baseUrl, "");
+        }
+
+        @Override
+        protected Retrofit provideRetrofit(OkHttpClient okHttpClient) {
+            return super.provideRetrofit(okHttpClient);
+        }
+
+        @Override
+        protected OkHttpClient provideOkHttpClient(Cache cache) {
+            return super.provideOkHttpClient(cache);
+        }
+    }
 }

@@ -9,17 +9,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
+@Singleton
 public class MoviePostersRepository {
 
     private final NetworkDataSource networkDataSource;
     private final MoviePosterDAO moviePosterDAO;
     private final Executor executor;
 
-
+    @Inject
     public MoviePostersRepository(NetworkDataSource networkDataSource, MoviePosterDAO moviePosterDAO,
                                   Executor executor) {
         this.networkDataSource = networkDataSource;

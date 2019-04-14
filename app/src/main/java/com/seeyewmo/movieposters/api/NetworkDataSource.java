@@ -3,6 +3,9 @@ package com.seeyewmo.movieposters.api;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import okhttp3.HttpUrl;
@@ -15,11 +18,13 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+@Singleton
 public class NetworkDataSource {
 
     private final MovieWebService webService;
     private Call<SearchResult> searchResultCall;
 
+    @Inject
     public NetworkDataSource(Retrofit retrofit) {
         // Create an instance of our GitHub API interface.
         webService = retrofit.create(MovieWebService.class);

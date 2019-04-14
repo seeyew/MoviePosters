@@ -1,14 +1,10 @@
 package com.seeyewmo.movieposters.di;
 
 import android.app.Application;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.inject.Singleton;
 
@@ -35,17 +31,9 @@ public class NetModule {
         this.mApiKey = apiKey;
     }
 
-    // Dagger will only look for methods annotated with @Provides
     @Provides
     @Singleton
-    // Application reference must come from AppModule.class
-    SharedPreferences providesSharedPreferences(Application application) {
-        return PreferenceManager.getDefaultSharedPreferences(application);
-    }
-
-    @Provides
-    @Singleton
-    Cache provideOkHttpCache(Application application) {
+    protected Cache provideOkHttpCache(Application application) {
         int cacheSize = 10 * 1024 * 1024; // 10 MiB
         Cache cache = new Cache(application.getCacheDir(), cacheSize);
         return cache;
@@ -53,18 +41,17 @@ public class NetModule {
 
     @Provides
     @Singleton
-    Gson provideGson() {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
-        return gsonBuilder.create();
+    protected Executor providesExecutor() {
+        return Executors.newCachedThreadPool();
     }
 
     @Provides
     @Singleton
-    OkHttpClient provideOkHttpClient(Cache cache) {
-        OkHttpClient.Builder client = new OkHttpClient.Builder();
-        client.cache(cache);
-        client.addInterceptor(new Interceptor() {
+    protected OkHttpClient provideOkHttpClient(Cache cache) {
+        OkHttpClient.Builder httpClient =
+                new OkHttpClient.Builder();
+        httpClient.cache(cache);
+        httpClient.addInterceptor(new Interceptor() {
             @Override
             public Response intercept(Chain chain) throws IOException {
                 Request original = chain.request();
@@ -82,16 +69,22 @@ public class NetModule {
                 return chain.proceed(request);
             }
         });
-        return client.build();
+        return httpClient.build();
     }
 
     @Provides
     @Singleton
-    Retrofit provideRetrofit(Gson gson, OkHttpClient okHttpClient) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create(gson))
+    protected Retrofit provideRetrofit(/*Gson gson,*/ OkHttpClient okHttpClient) {
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .addConverterFactory(GsonConverterFactory.create(gson))
+//                .baseUrl(mBaseUrl)
+//                .client(okHttpClient)
+//                .build();
+        Retrofit retrofit =  new Retrofit.Builder()
                 .baseUrl(mBaseUrl)
-                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+               // .callbackExecutor(Executors.newSingleThreadExecutor())
+                .client(okHttpClient) // OkHttp auto retires on connections issues anyway.
                 .build();
         return retrofit;
     }

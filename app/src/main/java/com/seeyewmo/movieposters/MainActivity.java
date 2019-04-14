@@ -7,6 +7,10 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 import android.app.SearchManager;
 import android.content.Context;
@@ -19,6 +23,8 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.widget.TextView;
 
+import com.seeyewmo.movieposters.api.MovieWebService;
+import com.seeyewmo.movieposters.api.SearchResult;
 import com.seeyewmo.movieposters.respository.MoviePostersRepository;
 import com.seeyewmo.movieposters.api.NetworkDataSource;
 import com.seeyewmo.movieposters.database.MoviePosterDB;
@@ -29,10 +35,15 @@ import com.seeyewmo.movieposters.viewmodel.MoviePosterViewModelFactory;
 
 import java.util.concurrent.Executors;
 
+import javax.inject.Inject;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private static final String DATABASE_NAME = "movies_db";
-    private MoviePosterDB movieDatabase;
+//    private static final String DATABASE_NAME = "movies_db";
+
+    @Inject
+    MoviePostersRepository repository;
+
     private MoviePosterViewModel viewModel;
     private RecyclerView mRecyclerView;
     private MoviePosterAdapter mAdapter;
@@ -42,13 +53,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ((MoviePosterApplication) getApplication()).getAppComponent().inject(this);
+
         setContentView(R.layout.activity_main);
 
-        movieDatabase = Room.databaseBuilder(getApplicationContext(),
-                MoviePosterDB.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
+//        movieDatabase = Room.databaseBuilder(getApplicationContext(),
+//                MoviePosterDB.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
         viewModel = ViewModelProviders.of(this,
-                new MoviePosterViewModelFactory(new MoviePostersRepository(new NetworkDataSource(MoviePosterApplication.getRetrofit()),
-                        movieDatabase.moviePosterDAO(), Executors.newCachedThreadPool()),
+                new MoviePosterViewModelFactory(repository,
                         savedInstanceState == null ? null : savedInstanceState.getString(QUERY_KEY)))
                 .get(MoviePosterViewModel.class);
 
@@ -60,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel.getResults().observe(this, searchResponse -> {
             if (searchResponse.getStatus() == Resource.Status.SUCCESS) {
-//                result.setText("Total Results" + searchResponse.getData().size());
+
                 //TODO this might have to be moved into viewmodel
                 if (searchResponse.getData().size() > 0) {
                     mRecyclerView.setVisibility(View.VISIBLE);

@@ -29,4 +29,7 @@ public interface MoviePosterDAO {
     @Query("DELETE FROM movieposter WHERE term = :term")
     void deleteOldMoviePosters(String term);
 
+    @Query("DELETE FROM movieposter")
+    void deleteAll();
+
 }
