@@ -52,9 +52,6 @@ public class MainActivity extends AppCompatActivity {
         //Handle previous queryTerm if process got killed
         if (savedInstanceState != null) {
             queryTerm = savedInstanceState.getString(QUERY_KEY, null);
-            if (!TextUtils.isEmpty(queryTerm)) {
-                searchView.setQuery(queryTerm, false);
-            }
         }
 
         viewModel = ViewModelProviders.of(this,
@@ -113,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         searchView =
                 (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setIconified(false);
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
 

@@ -12,19 +12,22 @@ import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
 public class MoviePosterViewModel extends ViewModel {
-
+    private String currentSearchTerm;
     private MutableLiveData<String> query = new MutableLiveData<>();
     private LiveData<Resource<List<MoviePoster>>> results;
 
     MoviePosterViewModel(final MoviePostersRepository repository) {
-        results = Transformations.switchMap(query, term -> repository.searchMoviePosters(term));
+        results = Transformations.switchMap(query, term -> {
+            currentSearchTerm = term;
+            return repository.searchMoviePosters(term);
+        });
     }
 
     public void searchText(final String term) {
-        if (term == null || term.isEmpty()) {
+        if (term == null || term.isEmpty() || term.equalsIgnoreCase(currentSearchTerm)) {
             return;
         }
-        query.setValue(term);
+        query.setValue(term.toLowerCase());
     }
 
     public LiveData<Resource<List<MoviePoster>>> getResults() {
