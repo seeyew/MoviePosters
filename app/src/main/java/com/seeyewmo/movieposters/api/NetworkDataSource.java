@@ -18,12 +18,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class NetworkDataSource {
 
     private final MovieWebService webService;
-    private final MutableLiveData<SearchResponse> searchResults;
     private Call<SearchResult> searchResultCall;
 
     public NetworkDataSource(Retrofit retrofit) {
-        searchResults = new MutableLiveData<>();
-
         // Create an instance of our GitHub API interface.
         webService = retrofit.create(MovieWebService.class);
     }
@@ -34,7 +31,8 @@ public class NetworkDataSource {
             searchResultCall.cancel();
         }
 
-        webService.searchPoster(key).enqueue(new Callback<SearchResult>() {
+        searchResultCall = webService.searchPoster(key);
+        searchResultCall.enqueue(new Callback<SearchResult>() {
             @Override
             public void onResponse(Call<SearchResult> call, retrofit2.Response<SearchResult> response) {
                 if (callback != null) {
@@ -45,7 +43,6 @@ public class NetworkDataSource {
                     } else {
                         callback.onResponse(SearchResponse.fail(key, result.getError()));
                     }
-
                 }
             }
 

@@ -23,11 +23,18 @@ public class MoviePosterApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
+        int cacheSize = 10 * 1024 * 1024; // 10MB
+        buildRetrofit(getOkhttpClient(new Cache(getCacheDir(),cacheSize)), API);
+    }
 
+    public static Retrofit getRetrofit() {
+        return retrofit;
+    }
+
+    public static OkHttpClient getOkhttpClient(Cache cache) {
         OkHttpClient.Builder httpClient =
                 new OkHttpClient.Builder();
-        int cacheSize = 10 * 1024 * 1024; // 10MB
-        httpClient.cache(new Cache(getCacheDir(),cacheSize));
+        httpClient.cache(cache);
         httpClient.addInterceptor(new Interceptor() {
             @Override
             public Response intercept(Chain chain) throws IOException {
@@ -46,18 +53,17 @@ public class MoviePosterApplication extends Application {
                 return chain.proceed(request);
             }
         });
+        return httpClient.build();
+    }
 
+    // TODO: This should be done by dagger
+    public static Retrofit buildRetrofit(OkHttpClient httpClient, String baseUrl) {
         retrofit = new Retrofit.Builder()
-                .baseUrl(API)
+                .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .callbackExecutor(Executors.newSingleThreadExecutor())
-                .client(httpClient.build()) // OkHttp auto retires on connections issues anyway.
+                .client(httpClient) // OkHttp auto retires on connections issues anyway.
                 .build();
-    }
-
-    public static Retrofit getRetrofit() {
         return retrofit;
     }
-
-
 }

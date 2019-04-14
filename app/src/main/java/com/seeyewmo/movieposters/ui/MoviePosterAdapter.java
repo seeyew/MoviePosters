@@ -78,7 +78,7 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
                 .centerCrop()
                 .into(holder.mPosterImageView);
 
-        final long id = poster.getId();
+        final String id = poster.getImdbId();
         holder.mItemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
