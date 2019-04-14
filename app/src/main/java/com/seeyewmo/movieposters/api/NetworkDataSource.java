@@ -36,7 +36,6 @@ public class NetworkDataSource {
             @Override
             public void onResponse(Call<SearchResult> call, retrofit2.Response<SearchResult> response) {
                 if (callback != null) {
-                    //TODO: Handle too many results
                     SearchResult result = response.body();
                     if (result.isSuccessful()) {
                         callback.onResponse(SearchResponse.success(key, result));

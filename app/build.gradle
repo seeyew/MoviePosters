@@ -31,6 +31,8 @@ dependencies {
     // Optional -- Robolectric environment
     androidTestImplementation 'androidx.test:core:1.1.0'
     androidTestImplementation 'android.arch.core:core-testing:1.1.1'
+    testImplementation 'androidx.test:core:1.1.0'
+    testImplementation 'android.arch.core:core-testing:1.1.1'
 
     // Optional -- Mockito framework
     testImplementation 'org.mockito:mockito-core:2.22.0'
@@ -46,9 +48,12 @@ dependencies {
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.5.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
-    androidTestImplementation 'com.squareup.retrofit2:retrofit-mock:2.0.0'
-//    testImplementation("com.squareup.okhttp3:mockwebserver:3.14.1")
+    testImplementation 'com.squareup.retrofit2:retrofit-mock:2.0.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.14.1'
+    androidTestImplementation 'com.squareup.retrofit2:retrofit-mock:2.0.0'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.14.1'
+//    testImplementation("com.squareup.okhttp3:mockwebserver:3.14.1")
+
     implementation "android.arch.persistence.room:runtime:1.1.1"
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
 

@@ -25,6 +25,10 @@ public class SearchResponse {
         return success;
     }
 
+    public String getTerm() {
+        return term;
+    }
+
     static <T> SearchResponse success(String term, SearchResult data) {
         return new SearchResponse(term,true, data, null);
     }

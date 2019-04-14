@@ -33,7 +33,15 @@ public class SearchResult {
         return moviePosters;
     }
 
+    public void setMoviePosters(MoviePoster[] movies) {
+        this.moviePosters = movies;
+    }
+
     String getError() {
         return error;
+    }
+
+    void setError(String error) {
+        this.error = error;
     }
 }
