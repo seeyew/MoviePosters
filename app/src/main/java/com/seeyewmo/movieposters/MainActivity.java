@@ -134,7 +134,9 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Query: " + query);
             queryTerm = query;
             viewModel.searchText(query);
-            mAdapter.clearData();
+//            mAdapter.clearData();
+            mRecyclerView.setVisibility(View.GONE);
+            resultView.setVisibility(View.VISIBLE);
         }
     }
 }

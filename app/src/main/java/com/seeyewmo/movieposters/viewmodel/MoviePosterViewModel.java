@@ -27,8 +27,8 @@ public class MoviePosterViewModel extends ViewModel {
     }
 
     public void searchText(final String term) {
-        if (term == null || term.isEmpty() || term.equalsIgnoreCase(currentSearchTerm)) {
-            Log.d(TAG, "Not setting quary because it's either null or the same");
+        if (term == null || term.isEmpty()) {
+            Log.d(TAG, "Not setting quary because it's  null ");
             return;
         }
         query.setValue(term.toLowerCase());
