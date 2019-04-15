@@ -20,15 +20,15 @@ The current implementation does not have a default photo for movies without post
 
 There are two types of tests
 1. Instrumentation tests (androidTest)
-  1. Database = MoviePosterDAOTest because I needed to test Room backed by SQLiteDatabase.
-  2. MainActivityTest - This is Espresso UI test. Please note that the test relies on MockWebServer,
+    1. Database = MoviePosterDAOTest because I needed to test Room backed by SQLiteDatabase.
+    2. MainActivityTest - This is Espresso UI test. Please note that the test relies on MockWebServer,
   which is a server running out of localhost like a web server. So this is as close as we can get
   without hitting the server.
 2. UnitTests (test). Each layer of the MVVM architecture is tested (except Room which is tested
 with Instrumented tests).
-  1. Network - Retrotif and WebService
-  2. Repository
-  3. ViewModel
+    1. Network - Retrotif and WebService
+    2. Repository
+    3. ViewModel
 
 I also created shared source and resource folders for both androidTests and regular JUnitTests.
 It's "testutils".
