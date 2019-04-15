@@ -1,7 +1,7 @@
 # movieposters
 An app to access the search http://omdbapi.com API for movies
 
-The app is implemented with MVVM architecture and utilized Retrofit, Room, Dagger and Mockito.
+The app is implemented with MVVM architecture and utilizes LiveData, Retrofit 2.0, Room, Dagger and Mockito.
 The MainActivity relies on MoviePosterViewModel that also handles orientation
 changes. The viewModel uses the MoviePosterRepository to retrief information. The repository
 handles caching and fetching information from the network. The two sources of are:
