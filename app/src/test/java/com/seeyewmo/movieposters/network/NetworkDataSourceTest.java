@@ -1,6 +1,7 @@
 package com.seeyewmo.movieposters.network;
 
 import com.seeyewmo.movieposters.di.modules.NetModule;
+import com.seeyewmo.movieposters.testutils.HandlerThreadExecutor;
 import com.seeyewmo.movieposters.testutils.MockServerDispatcher;
 import com.seeyewmo.movieposters.testutils.StringHelpers;
 
@@ -10,12 +11,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.robolectric.Robolectric;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.android.util.concurrent.RoboExecutorService;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 
@@ -25,8 +30,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.mock.NetworkBehavior;
 
+@RunWith(RobolectricTestRunner.class)
 public class NetworkDataSourceTest {
 
     @Rule
@@ -60,51 +67,44 @@ public class NetworkDataSourceTest {
     public void testTooManyResults() throws Exception {
         mockServerHelper("too_many_results.json");
 
-        CountDownLatch latch = new CountDownLatch(1);
         datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
             public void onResponse(SearchResult data) {
                 Assert.assertEquals("1", data.getTerm());
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
-                latch.countDown();
             }
         });
-
-        latch.await();
+        Robolectric.flushBackgroundThreadScheduler();
     }
 
     @Test
     public void testMovieNotFound() throws Exception {
         mockServerHelper("movies_not_found.json");
 
-        CountDownLatch latch = new CountDownLatch(1);
         datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
             public void onResponse(SearchResult data) {
                 Assert.assertEquals("1", data.getTerm());
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
-                latch.countDown();
             }
         });
-        latch.await();
+        Robolectric.flushBackgroundThreadScheduler();
     }
 
     @Test
     public void testClientError() throws Exception {
         mockWebServer.setDispatcher(new MockServerDispatcher.ErrorDispatcher());
-        CountDownLatch latch = new CountDownLatch(1);
         datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
             public void onResponse(SearchResult data) {
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
                 Assert.assertEquals("Client Error", data.getError());
-                latch.countDown();
             }
         });
-        latch.await();
+        Robolectric.flushBackgroundThreadScheduler();
     }
 
     @Test
@@ -112,32 +112,27 @@ public class NetworkDataSourceTest {
         //Shut down the server to simulate connection error!
         mockWebServer.shutdown();
 
-        CountDownLatch latch = new CountDownLatch(1);
         datasource.searchWithCallback("1", new NetworkCallback<SearchResult>() {
             @Override
             public void onResponse(SearchResult data) {
                 Assert.assertFalse(data.isSuccess());
                 Assert.assertNull(data.getData());
-                latch.countDown();
             }
         });
-        latch.await();
+        Robolectric.flushBackgroundThreadScheduler();
     }
 
     @Test
     public void testGoodResults() throws Exception {
         mockServerHelper("results_success.json");
 
-        CountDownLatch latch = new CountDownLatch(1);
         datasource.searchWithCallback("1", data -> {
                 Assert.assertEquals("1", data.getTerm());
                 Assert.assertTrue(data.isSuccess());
                 Assert.assertNotNull(data.getData());
                 Assert.assertEquals(10, data.getData().getMoviePosters().length);
-                latch.countDown();
         });
-
-        latch.await();
+        Robolectric.flushBackgroundThreadScheduler();
     }
 
     private void mockServerHelper(String resultFilePath) throws IOException {
@@ -155,12 +150,23 @@ public class NetworkDataSourceTest {
 
         @Override
         protected Retrofit provideRetrofit(OkHttpClient okHttpClient) {
-            return super.provideRetrofit(okHttpClient);
+            Retrofit retrofit =  new Retrofit.Builder()
+                    .baseUrl(mBaseUrl)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .callbackExecutor(new RoboExecutorService())
+                    .client(okHttpClient) // OkHttp auto retires on connections issues anyway.
+                    .build();
+            return retrofit;
         }
 
         @Override
         protected OkHttpClient provideOkHttpClient(Cache cache) {
             return super.provideOkHttpClient(cache);
+        }
+
+        @Override
+        protected Executor providesExecutor() {
+            return new HandlerThreadExecutor(null);
         }
     }
 }

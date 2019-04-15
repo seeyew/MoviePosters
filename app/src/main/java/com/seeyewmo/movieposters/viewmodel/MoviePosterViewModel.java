@@ -22,16 +22,22 @@ public class MoviePosterViewModel extends ViewModel {
     MoviePosterViewModel(final MoviePostersRepository repository) {
         results = Transformations.switchMap(query, term -> {
             currentSearchTerm = term;
-            return repository.searchMoviePosters(term);
+            return Transformations.map(repository.searchMoviePosters(term), posters -> {
+                if (posters.getStatus() == Resource.Status.ERROR) {
+                    currentSearchTerm = null; // clear search term
+                }
+                return posters;
+            });
         });
     }
 
     public void searchText(final String term) {
-        if (term == null || term.isEmpty()) {
-            Log.d(TAG, "Not setting quary because it's  null ");
+        if (term == null || term.isEmpty() || term.equalsIgnoreCase(currentSearchTerm)) {
+            Log.d(TAG, "Not setting quary because it's either null or the same");
             return;
         }
-        query.setValue(term.toLowerCase());
+        currentSearchTerm = term.toLowerCase();
+        query.setValue(currentSearchTerm);
     }
 
     public LiveData<Resource<List<MoviePoster>>> getResults() {

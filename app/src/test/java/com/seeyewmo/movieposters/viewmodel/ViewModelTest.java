@@ -8,9 +8,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 
@@ -20,6 +22,7 @@ import androidx.lifecycle.Observer;
 
 import static org.mockito.Mockito.when;
 
+@RunWith(RobolectricTestRunner.class)
 public class ViewModelTest {
     @Rule
     public TestRule rule = new InstantTaskExecutorRule();
@@ -58,6 +61,19 @@ public class ViewModelTest {
         String searchQuery = "test query";
         when(repository.searchMoviePosters(searchQuery)).thenReturn(Mockito.mock(LiveData.class));
         // Trigger
+        viewModel.searchText(searchQuery);
+
+        // Validation
+        Mockito.verify(repository, Mockito.times(1)).searchMoviePosters(searchQuery);
+    }
+
+    @Test
+    public void testSearchTextRepeatQuery() {
+        String searchQuery = "test query";
+        when(repository.searchMoviePosters(searchQuery)).thenReturn(Mockito.mock(LiveData.class));
+        // Trigger
+        viewModel.searchText(searchQuery);
+        // Trigger the second time
         viewModel.searchText(searchQuery);
 
         // Validation

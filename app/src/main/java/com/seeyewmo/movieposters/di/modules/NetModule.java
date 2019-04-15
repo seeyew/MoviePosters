@@ -21,9 +21,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 @Module
 public class NetModule {
-
-    private final String mBaseUrl;
-    private final String mApiKey;
+    protected final String mBaseUrl;
+    protected final String mApiKey;
 
     // Constructor needs one parameter to instantiate.
     public NetModule(String baseUrl, String apiKey) {
@@ -83,7 +82,7 @@ public class NetModule {
         Retrofit retrofit =  new Retrofit.Builder()
                 .baseUrl(mBaseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
-               // .callbackExecutor(Executors.newSingleThreadExecutor())
+                // .callbackExecutor(Executors.newSingleThreadExecutor())
                 .client(okHttpClient) // OkHttp auto retires on connections issues anyway.
                 .build();
         return retrofit;

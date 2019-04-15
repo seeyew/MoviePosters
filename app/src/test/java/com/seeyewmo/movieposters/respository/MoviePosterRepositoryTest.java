@@ -13,9 +13,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+@RunWith(RobolectricTestRunner.class)
 public class MoviePosterRepositoryTest {
     @Rule
     public TestRule rule = new InstantTaskExecutorRule();

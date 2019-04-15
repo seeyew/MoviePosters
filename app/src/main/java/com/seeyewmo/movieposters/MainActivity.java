@@ -135,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
             queryTerm = query;
             viewModel.searchText(query);
 //            mAdapter.clearData();
-            mRecyclerView.setVisibility(View.GONE);
-            resultView.setVisibility(View.VISIBLE);
+//            mRecyclerView.setVisibility(View.GONE);
+//            resultView.setVisibility(View.VISIBLE);
         }
     }
 }
